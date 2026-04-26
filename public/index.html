@@ -14,9 +14,15 @@
   <div class="modal-box">
     <div class="logo">📝</div>
     <h1>Annotate</h1>
-    <p>Collaborative document annotation platform.<br/>Enter your name to get started.</p>
-    <input id="username-input" type="text" placeholder="Your name (e.g. Alice)" maxlength="30" autocomplete="off"/>
-    <button class="btn-primary" id="login-btn">Enter Workspace →</button>
+    <p>Collaborative document annotation platform.<br/>Log in or register to get started.</p>
+    <div style="display: flex; flex-direction: column; gap: 10px; margin-bottom: 15px;">
+      <input id="username-input" type="text" placeholder="Username" maxlength="30" autocomplete="off"/>
+      <input id="password-input" type="password" placeholder="Password" maxlength="50"/>
+    </div>
+    <div style="display: flex; gap: 10px;">
+      <button class="btn-primary" id="login-btn" style="flex: 1;">Login</button>
+      <button class="btn-nav ghost" id="register-btn" style="flex: 1; border: 1px solid var(--border-color);">Register</button>
+    </div>
   </div>
 </div>
 

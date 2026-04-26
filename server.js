@@ -10,9 +10,12 @@ const path = require('path');
 const fs = require('fs');
 const { MongoMemoryServer } = require('mongodb-memory-server');
 
+const bcrypt = require('bcryptjs');
+
 const Document = require('./models/Document');
 const Annotation = require('./models/Annotation');
 const HistoryLog = require('./models/HistoryLog');
+const User = require('./models/User');
 
 const app = express();
 const server = http.createServer(app);
@@ -68,6 +71,44 @@ async function logHistory(action, author, opts = {}) {
   io.emit('history:new', entry);
   return entry;
 }
+
+// ─── REST API: Auth ────────────────────────────────────────────────────────────
+
+// Register user
+app.post('/api/register', async (req, res) => {
+  try {
+    const { username, password } = req.body;
+    if (!username || !password) return res.status(400).json({ error: 'Username and password required' });
+    
+    const existingUser = await User.findOne({ username });
+    if (existingUser) return res.status(400).json({ error: 'Username already exists' });
+    
+    const hashedPassword = await bcrypt.hash(password, 10);
+    const user = await User.create({ username, password: hashedPassword });
+    
+    res.json({ success: true, username: user.username });
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+// Login user
+app.post('/api/login', async (req, res) => {
+  try {
+    const { username, password } = req.body;
+    if (!username || !password) return res.status(400).json({ error: 'Username and password required' });
+    
+    const user = await User.findOne({ username });
+    if (!user) return res.status(400).json({ error: 'Invalid username or password' });
+    
+    const isMatch = await bcrypt.compare(password, user.password);
+    if (!isMatch) return res.status(400).json({ error: 'Invalid username or password' });
+    
+    res.json({ success: true, username: user.username });
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
 
 // ─── REST API: Documents ───────────────────────────────────────────────────────
 

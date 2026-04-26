@@ -34,15 +34,52 @@ const ACTION_META = {
 /* ════════════════════════════════════════════════════════
    INIT / AUTH
 ════════════════════════════════════════════════════════ */
-document.getElementById('username-input').addEventListener('keydown', e => {
+document.getElementById('password-input').addEventListener('keydown', e => {
   if (e.key === 'Enter') login();
 });
 document.getElementById('login-btn').addEventListener('click', login);
+document.getElementById('register-btn').addEventListener('click', register);
 
-function login() {
-  const val = document.getElementById('username-input').value.trim();
-  if (!val) { showToast('Please enter your name', 'error'); return; }
-  currentUser = val;
+async function login() {
+  const username = document.getElementById('username-input').value.trim();
+  const password = document.getElementById('password-input').value.trim();
+  if (!username || !password) { showToast('Please enter username and password', 'error'); return; }
+  
+  const res = await apiFetch('/api/login', {
+    method: 'POST',
+    body: JSON.stringify({ username, password })
+  });
+  
+  if (res.error) {
+    showToast(res.error, 'error');
+    return;
+  }
+  
+  currentUser = res.username;
+  completeLogin();
+}
+
+async function register() {
+  const username = document.getElementById('username-input').value.trim();
+  const password = document.getElementById('password-input').value.trim();
+  if (!username || !password) { showToast('Please enter username and password', 'error'); return; }
+  
+  const res = await apiFetch('/api/register', {
+    method: 'POST',
+    body: JSON.stringify({ username, password })
+  });
+  
+  if (res.error) {
+    showToast(res.error, 'error');
+    return;
+  }
+  
+  currentUser = res.username;
+  showToast('Account created successfully!', 'success');
+  completeLogin();
+}
+
+function completeLogin() {
   document.getElementById('login-modal').classList.add('hidden');
   document.getElementById('nav-username').textContent = currentUser;
   const avatar = document.getElementById('nav-avatar');
