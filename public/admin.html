@@ -1,0 +1,167 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Admin Dashboard - DocAnnot</title>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+  <link href='https://unpkg.com/boxicons@2.1.4/css/boxicons.min.css' rel='stylesheet'>
+  <link rel="stylesheet" href="admin.css">
+</head>
+<body>
+  <div class="dashboard">
+    <!-- Sidebar -->
+    <aside class="sidebar">
+      <div class="logo">
+        <i class='bx bx-book-content'></i> DocAnnot <span>ADMIN</span>
+      </div>
+      
+      <div class="nav-section">
+        <div class="nav-title">OVERVIEW</div>
+        <a href="#" class="nav-item active"><i class='bx bxs-dashboard'></i> Dashboard</a>
+        <a href="#" class="nav-item"><i class='bx bx-bar-chart-alt-2'></i> Analytics</a>
+      </div>
+
+      <div class="nav-section">
+        <div class="nav-title">MANAGE</div>
+        <a href="#" class="nav-item"><i class='bx bx-user'></i> Users <span class="badge" id="nav-users-count">0</span></a>
+        <a href="#" class="nav-item"><i class='bx bx-file-blank'></i> Documents <span class="badge" id="nav-docs-count">0</span></a>
+        <a href="#" class="nav-item"><i class='bx bx-message-square-dots'></i> Annotations <span class="badge" id="nav-annotations-count">0</span></a>
+        <a href="#" class="nav-item"><i class='bx bx-flag'></i> Reports <span class="badge red">7</span></a>
+      </div>
+
+      <div class="nav-section">
+        <div class="nav-title">SYSTEM</div>
+        <a href="#" class="nav-item"><i class='bx bx-shield-quarter'></i> Permissions</a>
+        <a href="#" class="nav-item"><i class='bx bx-data'></i> Database</a>
+        <a href="#" class="nav-item"><i class='bx bx-history'></i> Audit Logs</a>
+      </div>
+    </aside>
+
+    <!-- Main Content -->
+    <main class="main-content">
+      <!-- Header -->
+      <header class="top-header">
+        <div class="search-bar">
+          <i class='bx bx-search'></i>
+          <input type="text" placeholder="Search users, docs, annotations...">
+        </div>
+        <div class="header-actions">
+          <button class="icon-btn"><i class='bx bx-bell'></i><span class="notification-dot"></span></button>
+          <div class="profile-avatar">V</div>
+        </div>
+      </header>
+
+      <div class="dashboard-content">
+        <div class="page-header">
+          <div>
+            <h1>Admin Dashboard</h1>
+            <p>DocAnnot • Collaborative Document Annotation</p>
+          </div>
+          <div class="page-actions">
+            <button class="btn secondary"><i class='bx bx-download'></i> Export</button>
+            <button class="btn primary"><i class='bx bx-plus'></i> Add User</button>
+          </div>
+        </div>
+
+        <!-- KPI Cards -->
+        <div class="kpi-grid">
+          <div class="kpi-card">
+            <div class="kpi-header">
+              <span>TOTAL USERS</span>
+              <i class='bx bx-group'></i>
+            </div>
+            <div class="kpi-value" id="kpi-users">0</div>
+            <div class="kpi-trend positive"><i class='bx bx-up-arrow-alt'></i> +12% this month</div>
+          </div>
+          <div class="kpi-card">
+            <div class="kpi-header">
+              <span>DOCUMENTS</span>
+              <i class='bx bx-file'></i>
+            </div>
+            <div class="kpi-value" id="kpi-docs">0</div>
+            <div class="kpi-trend positive"><i class='bx bx-up-arrow-alt'></i> +34 today</div>
+          </div>
+          <div class="kpi-card">
+            <div class="kpi-header">
+              <span>ANNOTATIONS</span>
+              <i class='bx bx-message-rounded'></i>
+            </div>
+            <div class="kpi-value" id="kpi-annotations">0</div>
+            <div class="kpi-trend positive"><i class='bx bx-up-arrow-alt'></i> +8.4%</div>
+          </div>
+          <div class="kpi-card">
+            <div class="kpi-header">
+              <span>REPORTS</span>
+              <i class='bx bx-flag'></i>
+            </div>
+            <div class="kpi-value text-warning" id="kpi-reports">7</div>
+            <div class="kpi-trend warning"><i class='bx bx-error'></i> Needs review</div>
+          </div>
+          <div class="kpi-card">
+            <div class="kpi-header">
+              <span>LIVE SESSIONS</span>
+              <i class='bx bx-pulse'></i>
+            </div>
+            <div class="kpi-value text-success" id="kpi-live">0</div>
+            <div class="kpi-trend neutral">Online now</div>
+          </div>
+        </div>
+
+        <div class="middle-grid">
+          <!-- Chart -->
+          <div class="chart-section panel">
+            <h3>Annotation Activity — Last 14 Days</h3>
+            <div class="chart-container">
+              <canvas id="activityChart"></canvas>
+            </div>
+          </div>
+
+          <!-- Recent Activity -->
+          <div class="recent-activity-section panel">
+            <h3>Recent Activity</h3>
+            <div class="activity-list" id="activity-list">
+              <!-- Dynamically populated -->
+            </div>
+          </div>
+        </div>
+
+        <!-- Users Table -->
+        <div class="users-section panel">
+          <div class="users-header">
+            <h3>Users</h3>
+            <span id="total-users-label">0 total</span>
+          </div>
+          <div class="users-filters">
+            <button class="filter-btn active">All</button>
+            <button class="filter-btn">Admin</button>
+            <button class="filter-btn">Editor</button>
+            <button class="filter-btn">Viewer</button>
+          </div>
+          <div class="table-responsive">
+            <table class="users-table">
+              <thead>
+                <tr>
+                  <th>USER</th>
+                  <th>ROLE</th>
+                  <th>STATUS</th>
+                  <th>DOCS</th>
+                  <th>ANNOTATIONS</th>
+                  <th>JOINED</th>
+                </tr>
+              </thead>
+              <tbody id="users-tbody">
+                <!-- Dynamically populated -->
+              </tbody>
+            </table>
+          </div>
+        </div>
+
+      </div>
+    </main>
+  </div>
+
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <script src="admin.js"></script>
+</body>
+</html>

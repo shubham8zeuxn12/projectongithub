@@ -301,6 +301,100 @@ app.delete('/api/annotations/:id', async (req, res) => {
   }
 });
 
+// ─── REST API: Dashboard ──────────────────────────────────────────────────────
+
+app.get('/api/dashboard/stats', async (req, res) => {
+  try {
+    const usersCount = await User.countDocuments();
+    const docsCount = await Document.countDocuments();
+    const annotationsCount = await Annotation.countDocuments();
+    // Reports is mocked as 7 based on mockup
+    const reportsCount = 7; 
+    
+    // Live sessions based on Socket.io
+    const liveSessionsCount = io.engine.clientsCount;
+
+    res.json({
+      users: usersCount,
+      documents: docsCount,
+      annotations: annotationsCount,
+      reports: reportsCount,
+      liveSessions: liveSessionsCount
+    });
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+app.get('/api/dashboard/activity-chart', async (req, res) => {
+  try {
+    const fourteenDaysAgo = new Date();
+    fourteenDaysAgo.setDate(fourteenDaysAgo.getDate() - 14);
+
+    const activity = await HistoryLog.aggregate([
+      {
+        $match: {
+          action: 'ANNOTATION_CREATED',
+          timestamp: { $gte: fourteenDaysAgo }
+        }
+      },
+      {
+        $group: {
+          _id: {
+            $dateToString: { format: "%Y-%m-%d", date: "$timestamp" }
+          },
+          count: { $sum: 1 }
+        }
+      },
+      { $sort: { "_id": 1 } }
+    ]);
+
+    res.json(activity);
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+// ─── REST API: Users ──────────────────────────────────────────────────────────
+
+app.get('/api/users', async (req, res) => {
+  try {
+    const users = await User.aggregate([
+      {
+        $lookup: {
+          from: 'documents',
+          localField: 'username',
+          foreignField: 'uploadedBy',
+          as: 'docs'
+        }
+      },
+      {
+        $lookup: {
+          from: 'annotations',
+          localField: 'username',
+          foreignField: 'author',
+          as: 'annotations'
+        }
+      },
+      {
+        $project: {
+          username: 1,
+          email: 1,
+          role: 1,
+          status: 1,
+          createdAt: 1,
+          docsCount: { $size: "$docs" },
+          annotationsCount: { $size: "$annotations" }
+        }
+      },
+      { $sort: { createdAt: -1 } }
+    ]);
+    res.json(users);
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
 // ─── REST API: History ────────────────────────────────────────────────────────
 
 app.get('/api/history', async (req, res) => {

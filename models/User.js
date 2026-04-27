@@ -12,6 +12,21 @@ const UserSchema = new mongoose.Schema({
   password: {
     type: String,
     required: true
+  },
+  email: {
+    type: String,
+    trim: true,
+    lowercase: true
+  },
+  role: {
+    type: String,
+    enum: ['Admin', 'Editor', 'Viewer'],
+    default: 'Viewer'
+  },
+  status: {
+    type: String,
+    enum: ['Active', 'Inactive'],
+    default: 'Active'
   }
 }, { timestamps: true });
 
