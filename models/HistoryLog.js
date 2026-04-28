@@ -3,7 +3,7 @@ const mongoose = require('mongoose');
 const HistoryLogSchema = new mongoose.Schema({
   action: {
     type: String,
-    enum: ['DOCUMENT_UPLOADED', 'ANNOTATION_CREATED', 'REPLY_ADDED', 'ANNOTATION_RESOLVED', 'ANNOTATION_DELETED'],
+    enum: ['DOCUMENT_UPLOADED', 'ANNOTATION_CREATED', 'REPLY_ADDED'],
     required: true
   },
   documentId: { type: mongoose.Schema.Types.ObjectId, ref: 'Document' },

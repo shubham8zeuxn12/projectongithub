@@ -27,18 +27,51 @@ const ACTION_META = {
   DOCUMENT_UPLOADED:   { icon: '📤', color: '#06b6d4' },
   ANNOTATION_CREATED:  { icon: '💬', color: '#8b5cf6' },
   REPLY_ADDED:         { icon: '↩️', color: '#f59e0b' },
-  ANNOTATION_RESOLVED: { icon: '✅', color: '#10b981' },
-  ANNOTATION_DELETED:  { icon: '🗑️', color: '#ef4444' },
 };
 
 /* ════════════════════════════════════════════════════════
    INIT / AUTH
 ════════════════════════════════════════════════════════ */
+let authMode = 'login'; // 'login' or 'register'
+
 document.getElementById('password-input').addEventListener('keydown', e => {
-  if (e.key === 'Enter') login();
+  if (e.key === 'Enter') handleAuth();
 });
-document.getElementById('login-btn').addEventListener('click', login);
-document.getElementById('register-btn').addEventListener('click', register);
+
+document.getElementById('show-login').addEventListener('click', () => setAuthMode('login'));
+document.getElementById('show-register').addEventListener('click', () => setAuthMode('register'));
+document.getElementById('auth-submit-btn').addEventListener('click', handleAuth);
+
+function setAuthMode(mode) {
+  authMode = mode;
+  const toggle = document.getElementById('auth-toggle');
+  const title = document.getElementById('auth-title');
+  const subtitle = document.getElementById('auth-subtitle');
+  const submitText = document.getElementById('submit-text');
+  const loginBtn = document.getElementById('show-login');
+  const registerBtn = document.getElementById('show-register');
+
+  if (mode === 'login') {
+    toggle.classList.remove('register-mode');
+    title.textContent = 'Welcome back';
+    subtitle.textContent = 'Sign in to your account';
+    submitText.textContent = 'Sign In';
+    loginBtn.classList.add('active');
+    registerBtn.classList.remove('active');
+  } else {
+    toggle.classList.add('register-mode');
+    title.textContent = 'Create account';
+    subtitle.textContent = 'Join the collaborative community';
+    submitText.textContent = 'Register';
+    registerBtn.classList.add('active');
+    loginBtn.classList.remove('active');
+  }
+}
+
+async function handleAuth() {
+  if (authMode === 'login') await login();
+  else await register();
+}
 
 async function login() {
   const username = document.getElementById('username-input').value.trim();
@@ -75,7 +108,7 @@ async function register() {
   }
   
   currentUser = res.username;
-  showToast('Account created successfully!', 'success');
+  showToast('Account created successfully! You are now signed up.', 'success');
   completeLogin();
 }
 
@@ -86,7 +119,7 @@ function completeLogin() {
   avatar.textContent = currentUser.charAt(0).toUpperCase();
   loadDocuments();
   loadHistory();
-  showToast(`Welcome, ${currentUser}! 👋`, 'success');
+  showToast(`Logged in as ${currentUser}! 👋`, 'success');
 }
 
 /* ════════════════════════════════════════════════════════
@@ -135,14 +168,6 @@ socket.on('annotation:updated', ann => {
   }
 });
 
-socket.on('annotation:deleted', ({ id, documentId }) => {
-  if (currentDoc && documentId === currentDoc._id) {
-    annotations = annotations.filter(a => a._id !== id);
-    renderDoc(currentDoc);
-    renderAnnotationPanel(annotations);
-  }
-});
-
 socket.on('history:new', log => {
   historyLogs.unshift(log);
   updateHistoryBadge();
@@ -156,8 +181,9 @@ async function loadDocuments() {
   const docs = await apiFetch('/api/documents');
   const list = document.getElementById('doc-list');
   list.innerHTML = '';
-  if (!docs.length) {
+  if (!Array.isArray(docs) || docs.length === 0) {
     list.innerHTML = `<div class="sidebar-empty"><div class="empty-icon">📂</div><p>No documents yet.<br/>Upload one to begin.</p></div>`;
+    if (docs && docs.error) showToast('Could not load documents: ' + docs.error, 'error');
   } else {
     docs.forEach(addDocToSidebar);
   }
@@ -264,8 +290,7 @@ function buildHighlightedContent(content, anns) {
     result += escapeHtml(content.slice(cursor, ann.startOffset));
     const colorKey = ann.color || 'amber';
     const cls = COLOR_MAP[colorKey]?.cls || 'hl-amber';
-    const resolvedAttr = ann.resolved ? 'style="opacity:.45"' : '';
-    result += `<span class="annotation-highlight ${cls}" data-ann-id="${ann._id}" title="${escapeAttr(ann.comment)}" ${resolvedAttr}>${escapeHtml(content.slice(ann.startOffset, ann.endOffset))}</span>`;
+    result += `<span class="annotation-highlight ${cls}" data-ann-id="${ann._id}" title="${escapeAttr(ann.comment)}">${escapeHtml(content.slice(ann.startOffset, ann.endOffset))}</span>`;
     cursor = ann.endOffset;
   }
   result += escapeHtml(content.slice(cursor));
@@ -386,23 +411,6 @@ function renderCommentsTab(anns) {
     });
   });
 
-  panel.querySelectorAll('.btn-resolve').forEach(btn => {
-    btn.addEventListener('click', async e => {
-      e.stopPropagation();
-      const id = btn.dataset.annId;
-      await apiFetch(`/api/annotations/${id}/resolve`, { method: 'PUT', body: JSON.stringify({ author: currentUser }) });
-    });
-  });
-
-  panel.querySelectorAll('.btn-delete-ann').forEach(btn => {
-    btn.addEventListener('click', async e => {
-      e.stopPropagation();
-      const id = btn.dataset.annId;
-      if (!confirm('Delete this annotation?')) return;
-      await apiFetch(`/api/annotations/${id}`, { method: 'DELETE', body: JSON.stringify({ author: currentUser }) });
-    });
-  });
-
   panel.querySelectorAll('.reply-send').forEach(btn => {
     btn.addEventListener('click', async e => {
       e.stopPropagation();
@@ -450,11 +458,8 @@ function annotationCardHTML(ann) {
       </div>
     </div>`).join('') || '';
 
-  const resolvedBadge = ann.resolved
-    ? `<span class="resolved-badge">✓ Resolved</span>` : '';
-
   return `
-  <div class="annotation-card${ann.resolved ? ' resolved' : ''}${activeAnnotationId === ann._id ? ' active' : ''}"
+  <div class="annotation-card${activeAnnotationId === ann._id ? ' active' : ''}"
        data-ann-id="${ann._id}"
        style="--card-color:${hex}">
     <div class="ann-selected-text">"${escapeHtml(ann.selectedText?.substring(0, 70))}${ann.selectedText?.length > 70 ? '…' : ''}"</div>
@@ -462,14 +467,7 @@ function annotationCardHTML(ann) {
     <div class="ann-meta">
       <span class="ann-author">👤 ${escapeHtml(ann.author)}</span>
       <span>· ${timeAgo(ann.createdAt)}</span>
-      ${resolvedBadge}
       ${ann.replies?.length ? `<span>· ${ann.replies.length} ${ann.replies.length === 1 ? 'reply' : 'replies'}</span>` : ''}
-    </div>
-    <div class="ann-actions">
-      <button class="btn-sm success btn-resolve" data-ann-id="${ann._id}" title="${ann.resolved ? 'Reopen' : 'Mark resolved'}">
-        ${ann.resolved ? '↩ Reopen' : '✓ Resolve'}
-      </button>
-      <button class="btn-sm danger btn-delete-ann" data-ann-id="${ann._id}" title="Delete">🗑</button>
     </div>
     ${ann.replies?.length ? `<div class="reply-thread">${repliesHTML}</div>` : ''}
     <div class="reply-input-row" style="margin-top:10px">
@@ -498,7 +496,8 @@ function updateAnnCountBadge() {
    HISTORY TAB
 ════════════════════════════════════════════════════════ */
 async function loadHistory() {
-  historyLogs = await apiFetch('/api/history?limit=200');
+  const result = await apiFetch('/api/history?limit=200');
+  historyLogs = Array.isArray(result) ? result : [];
   updateHistoryBadge();
   if (activeTab === 'history') renderHistoryTab();
 }
@@ -635,10 +634,14 @@ async function apiFetch(url, opts = {}) {
       headers: { 'Content-Type': 'application/json', ...opts.headers },
       ...opts
     });
+    if (!res.ok) {
+      const errData = await res.json().catch(() => ({}));
+      return { error: errData.error || `Server error ${res.status}` };
+    }
     return await res.json();
   } catch (err) {
-    showToast('Network error', 'error');
-    return {};
+    showToast('Cannot reach server. Is it running?', 'error');
+    return { error: err.message };
   }
 }
 

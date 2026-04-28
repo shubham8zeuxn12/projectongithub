@@ -14,7 +14,6 @@ const AnnotationSchema = new mongoose.Schema({
   comment: { type: String, required: true },
   author: { type: String, required: true },
   color: { type: String, default: '#f59e0b' },
-  resolved: { type: Boolean, default: false },
   replies: [ReplySchema],
   createdAt: { type: Date, default: Date.now },
   updatedAt: { type: Date, default: Date.now }
