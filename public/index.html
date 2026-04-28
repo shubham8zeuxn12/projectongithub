@@ -68,6 +68,28 @@
   </div>
 </div>
 
+<!-- ══ Profile Modal ═════════════════════════════════════════ -->
+<div id="profile-modal" class="hidden" style="position:fixed;inset:0;background:rgba(0,0,0,0.7);backdrop-filter:blur(8px);z-index:900;display:flex;align-items:center;justify-content:center">
+  <div class="upload-box" style="width:350px;text-align:center">
+    <div class="avatar" id="profile-avatar" style="width:64px;height:64px;font-size:28px;margin:0 auto 16px;">?</div>
+    <h3 id="profile-name" style="margin-bottom:4px">Username</h3>
+    <p style="margin-bottom:24px;color:var(--text-muted)">Member</p>
+    
+    <div style="display:flex;gap:16px;justify-content:center;margin-bottom:24px">
+      <div style="background:var(--bg-card);padding:16px;border-radius:12px;flex:1;border:1px solid var(--border)">
+        <div style="font-size:24px;font-weight:700;color:var(--accent-2)" id="profile-docs-count">-</div>
+        <div style="font-size:11px;color:var(--text-muted);text-transform:uppercase;letter-spacing:1px;margin-top:4px">Uploads</div>
+      </div>
+      <div style="background:var(--bg-card);padding:16px;border-radius:12px;flex:1;border:1px solid var(--border)">
+        <div style="font-size:24px;font-weight:700;color:var(--accent)" id="profile-anns-count">-</div>
+        <div style="font-size:11px;color:var(--text-muted);text-transform:uppercase;letter-spacing:1px;margin-top:4px">Comments</div>
+      </div>
+    </div>
+    
+    <button class="btn-nav ghost" style="width:100%" id="close-profile">Close</button>
+  </div>
+</div>
+
 <!-- ══ Selection Popup ═══════════════════════════════════════ -->
 <div id="selection-popup">
   <div class="popup-label">Selected text</div>

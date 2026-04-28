@@ -560,6 +560,35 @@ document.getElementById('close-upload').addEventListener('click', () => {
   document.getElementById('upload-modal').classList.add('hidden');
 });
 
+/* ════════════════════════════════════════════════════════
+   PROFILE MODAL
+════════════════════════════════════════════════════════ */
+document.querySelector('.nav-user').addEventListener('click', async () => {
+  if (!currentUser) return;
+  document.getElementById('profile-modal').classList.remove('hidden');
+  document.getElementById('profile-name').textContent = currentUser;
+  document.getElementById('profile-avatar').textContent = currentUser.charAt(0).toUpperCase();
+  
+  document.getElementById('profile-docs-count').textContent = '...';
+  document.getElementById('profile-anns-count').textContent = '...';
+  
+  const users = await apiFetch('/api/users');
+  if (Array.isArray(users)) {
+    const me = users.find(u => u.username === currentUser);
+    if (me) {
+      document.getElementById('profile-docs-count').textContent = me.docsCount || 0;
+      document.getElementById('profile-anns-count').textContent = me.annotationsCount || 0;
+    } else {
+      document.getElementById('profile-docs-count').textContent = 0;
+      document.getElementById('profile-anns-count').textContent = 0;
+    }
+  }
+});
+
+document.getElementById('close-profile').addEventListener('click', () => {
+  document.getElementById('profile-modal').classList.add('hidden');
+});
+
 const dropZone = document.getElementById('drop-zone');
 const fileInput = document.getElementById('file-input');
 
