@@ -152,6 +152,8 @@ socket.on('document:deleted', ({ id }) => {
 
 socket.on('annotation:new', ann => {
   if (currentDoc && ann.documentId === currentDoc._id) {
+    // Skip if already added locally (i.e. we were the one who submitted it)
+    if (annotations.find(a => a._id === ann._id)) return;
     annotations.push(ann);
     renderDoc(currentDoc);
     renderAnnotationPanel(annotations);
