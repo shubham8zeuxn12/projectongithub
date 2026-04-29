@@ -152,12 +152,13 @@ socket.on('document:deleted', ({ id }) => {
 
 socket.on('annotation:new', ann => {
   if (currentDoc && ann.documentId === currentDoc._id) {
-    // Skip if already added locally (i.e. we were the one who submitted it)
-    if (annotations.find(a => a._id === ann._id)) return;
     annotations.push(ann);
     renderDoc(currentDoc);
     renderAnnotationPanel(annotations);
-    showToast(`💬 New comment by ${ann.author}`, 'info');
+    // Only show toast for OTHER users' comments, not your own
+    if (ann.author !== currentUser) {
+      showToast(`💬 New comment by ${ann.author}`, 'info');
+    }
   }
 });
 
@@ -363,13 +364,12 @@ document.getElementById('submit-ann').addEventListener('click', async () => {
 
   btn.textContent = 'Add Comment'; btn.disabled = false;
   if (ann && !ann.error) {
-    annotations.push(ann);
-    renderDoc(currentDoc);
-    renderAnnotationPanel(annotations);
+    // Don't push/render here — the socket event handles it for everyone
     hidePopup();
     window.getSelection()?.removeAllRanges();
     showToast('Comment added ✓', 'success');
-    updateAnnCountBadge();
+  } else if (ann && ann.error) {
+    showToast(ann.error, 'error');
   }
 });
 
