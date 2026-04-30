@@ -333,3 +333,28 @@ server.listen(PORT, () => {
   console.log(`🚀 Server running at http://localhost:${PORT}`);
   console.log(`📂 Uploads stored in: ${path.join(__dirname, 'uploads')}`);
 });
+
+// ─── Port already in use: show helpful message ────────────────────────────────
+server.on('error', (err) => {
+  if (err.code === 'EADDRINUSE') {
+    console.error(`\n❌ Port ${PORT} is already in use!`);
+    console.error(`   Run this command to free it, then try again:`);
+    console.error(`   npx kill-port ${PORT}\n`);
+  } else {
+    console.error('❌ Server error:', err.message);
+  }
+  process.exit(1);
+});
+
+// ─── Graceful shutdown (Ctrl+C) ───────────────────────────────────────────────
+function shutdown() {
+  console.log('\n⏹  Shutting down server…');
+  server.close(() => {
+    mongoose.connection.close(false, () => {
+      console.log('✅ Server and DB connection closed. Goodbye!');
+      process.exit(0);
+    });
+  });
+}
+process.on('SIGINT', shutdown);
+process.on('SIGTERM', shutdown);
